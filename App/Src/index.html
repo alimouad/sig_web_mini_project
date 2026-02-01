@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- icons css -->
+    <link rel="stylesheet" href="https://unicons.iconscout.com/release/v4.0.8/css/line.css">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <link rel="stylesheet" href="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.css" />
+
+    <link rel="stylesheet" href="./resources/bigImage.css">
+    <!-- <link rel="stylesheet" href="https://unpkg.com/esri-leaflet-geocoder@3.1.4/dist/esri-leaflet-geocoder.css"> -->
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css"
+        integrity="sha256-kLaT2GOSpHechhsozzB+flnD+zUyjE2LlfWPgU04xyI=" crossorigin="" />
+    <!-- leaflet plugins -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="./resources/L.Control.MousePosition.css">
+    <link rel="stylesheet" href="./resources/L.Control.Locate.css">
+    <link rel="stylesheet" href="./resources/leaflet.measure.css">
+    <!-- <link rel="stylesheet" href="./resources/leaflet-measure.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.css" />
+    <link rel="stylesheet" href="style.css">
+    <title>Sig Web</title>
+</head>
+
+<body>
+
+    <!-- ---loader -->
+    <div class="loader">
+        <div class="sk-cube-grid">
+            <div class="sk-cube sk-cube1"></div>
+            <div class="sk-cube sk-cube2"></div>
+            <div class="sk-cube sk-cube3"></div>
+            <div class="sk-cube sk-cube4"></div>
+            <div class="sk-cube sk-cube5"></div>
+            <div class="sk-cube sk-cube6"></div>
+            <div class="sk-cube sk-cube7"></div>
+            <div class="sk-cube sk-cube8"></div>
+            <div class="sk-cube sk-cube9"></div>
+        </div>
+    </div>
+
+
+    <!-- Restore Modal -->
+    <div id="restoreModal"
+        class="fixed hidden inset-0 z-[3000] flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div class="bg-white rounded-2xl shadow-xl w-96 p-6">
+            <h2 class="text-md font-semibold text-gray-800 mb-4">Restore Drawn Items?</h2>
+            <p class="text-gray-600 mb-6 text-sm">We found previously saved shapes. Do you want to restore them on the
+                map?</p>
+
+            <div class="flex justify-between">
+                <button id="cancelRestore"
+                    class="px-4 py-2 rounded-lg bg-gray-300 text-sm hover:bg-gray-400 text-gray-800">
+                    Cancel
+                </button>
+                <button id="confirmRestore"
+                    class="px-4 py-2 rounded-lg bg-blue-600 text-sm hover:bg-blue-700 text-white">
+                    Restore
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- tob bar----------------- -->
+    <div id="topBar" class="fixed top-6 left-1/2 transform -translate-x-1/2 
+    bg-white/80 backdrop-blur-md shadow-2xl shadow-slate-200/50 rounded-2xl px-6 py-3 
+    flex items-center gap-3 border border-white/20 z-[1000] min-w-fit 
+    transition-all duration-500 hover:top-5">
+
+        <!-- {{-- Info Button --}} -->
+        <button id="toggleInfo" title="View Info"
+            class="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all duration-300 group">
+            <span class="material-symbols-outlined text-[20px] group-hover:rotate-12 transition-transform">info</span>
+            <span class="text-xs font-black uppercase tracking-widest">Info</span>
+        </button>
+
+        <!-- {{-- Vertical Divider --}} -->
+        <div class="h-6 w-px bg-slate-200 mx-1"></div>
+
+        <!-- {{-- Import Button --}} -->
+        <button id="openImportModal" title="Import Files"
+            class="flex items-center gap-2 px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100 transition-all duration-300 active:scale-95 group">
+            <span
+                class="material-symbols-outlined text-[20px] group-hover:-translate-y-0.5 transition-transform">file_upload</span>
+            <span class="text-xs font-black uppercase tracking-widest">Import</span>
+        </button>
+
+        <!-- {{-- Export Button --}} -->
+        <button id="openExportModal" title="Export Files"
+            class="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl shadow-lg shadow-emerald-100 transition-all duration-300 active:scale-95 group">
+            <span
+                class="material-symbols-outlined text-[20px] group-hover:translate-y-0.5 transition-transform">file_download</span>
+            <span class="text-xs font-black uppercase tracking-widest">Export</span>
+        </button>
+    </div>
+
+
+
+    <!-- info model--------- -->
+    <div id="infoModal" class="hidden fixed inset-0 z-[2000] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md transition-opacity duration-500"></div>
+
+        <div
+            class="relative bg-white rounded-[2.5rem] shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 animate-in fade-in zoom-in duration-300">
+
+            <!-- {{-- Top Decorative Gradient --}} -->
+            <div class="h-2 w-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-teal-500"></div>
+
+            <div class="p-8 lg:p-10">
+                <div class="flex items-center gap-6 mb-8 border-b border-slate-50 pb-6">
+                    <div
+                        class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 shadow-inner relative group shrink-0">
+                        <div
+                            class="absolute inset-0 bg-emerald-200 rounded-2xl animate-ping opacity-20 group-hover:opacity-40">
+                        </div>
+                        <span class="material-symbols-outlined text-3xl relative z-10">map</span>
+                    </div>
+                    <div>
+                        <h3 class="text-2xl font-black text-slate-900 tracking-tight leading-none">FSBM WebGIS</h3>
+                        <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em] mt-2">Faculty of
+                            Sciences Ben M'Sik</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- {{-- Platform Intro --}} -->
+                    <div class="md:col-span-2 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
+                        <p class="text-sm text-slate-600 leading-relaxed">
+                            A professional geospatial solution designed for advanced interactive mapping and spatial
+                            analysis.
+                        </p>
+                    </div>
+
+                    <!-- {{-- Feature Column 1 --}} -->
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-emerald-500 text-xl">layers</span>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider">Layer Management
+                                </h4>
+                                <p class="text-[11px] text-slate-500 leading-snug mt-1">Remote data via GeoServer
+                                    (WMS/WFS) and local GeoJSON integration.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-emerald-500 text-xl">straighten</span>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider">SIG Toolset</h4>
+                                <p class="text-[11px] text-slate-500 leading-snug mt-1">Precision measurement of
+                                    distances and surfaces.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- {{-- Feature Column 2 --}} -->
+                    <div class="space-y-4">
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-emerald-500 text-xl">edit_square</span>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider">Digitization</h4>
+                                <p class="text-[11px] text-slate-500 leading-snug mt-1">Creation engine for Points
+                                    (POI), Lines, and Polygons.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-3">
+                            <span class="material-symbols-outlined text-emerald-500 text-xl">picture_as_pdf</span>
+                            <div>
+                                <h4 class="text-xs font-black text-slate-900 uppercase tracking-wider">Visualization
+                                </h4>
+                                <p class="text-[11px] text-slate-500 leading-snug mt-1">Dynamic legends and professional
+                                    PDF export modules.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-10">
+                    <button onclick="document.getElementById('infoModal').classList.add('hidden')"
+                        class="w-full py-4 bg-slate-900 text-white font-black rounded-2xl shadow-xl shadow-slate-200 hover:bg-slate-800 transition-all active:scale-95 tracking-widest text-xs uppercase">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- file management----- -->
+    <div id="fileManagementModal" class="hidden fixed inset-0 z-[1001] flex items-center justify-center">
+        <!-- Semi-transparent background -->
+        <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+
+        <!-- Modal content -->
+        <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 border border-gray-200 font-sans z-10">
+
+            <button id="closeFileManagementModal"
+                class="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-xl text-slate-400 hover:bg-rose-50 hover:text-rose-500 transition-all duration-200">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+
+            <!-- Title -->
+            <h3 class="text-xl text-center font-semibold text-gray-800 mb-6 border-b pb-4">
+                File Management
+            </h3>
+
+            <!-- Grid: Export / Import -->
+            <div class="grid grid-cols-2 gap-8">
+
+                <!-- Export -->
+                <div id="exportSection">
+                    <h4
+                        class="text-sm text-center font-bold text-indigo-600 flex items-center justify-center gap-2 mb-4">
+                        <i class="fa-solid fa-download"></i>
+                        Export
+                    </h4>
+                    <div class="space-y-3">
+                        <button id="exportgeo"
+                            class="w-full flex text-sm items-center justify-center gap-2 bg-indigo-500 text-white py-3 rounded-lg  shadow-md hover:bg-indigo-600 transition-all transform hover:scale-105">
+                            <i class="fa-solid fa-file-export"></i>
+                            GeoJSON
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Import -->
+                <div id="importSection">
+                    <h4
+                        class="text-sm text-center font-bold text-indigo-600 flex items-center justify-center gap-2 mb-4">
+                        <i class="fa-solid fa-upload"></i>
+                        Import
+                    </h4>
+                    <div class="space-y-3">
+                        <label for="geojson-file"
+                            class="block w-full text-center text-sm bg-gray-100 hover:bg-gray-200 cursor-pointer text-gray-700 py-3 rounded-lg  transition-all transform hover:scale-105">
+                            <i class="fa-solid fa-file-import mr-2"></i>
+                            GeoJSON
+                        </label>
+                        <input type="file" id="geojson-file" accept=".geojson" class="hidden">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- map--- -->
+    <div class="map" id="map">
+
+
+        <div class="privacy">
+            <h5>Created by <a href="https://www.linkedin.com/in/mouad-el-alli/" target="link">MOUAD EL ALLI</a></h5>
+        </div>
+
+
+        <div class="listFiles hidden absolute bottom-20 right-4 w-80 z-[8888] p-4 space-y-4 bg-transparent">
+
+            <!-- List of files -->
+            <div class="bg-white rounded-lg shadow-md p-4">
+                <h6 class="text-lg font-semibold text-gray-700 mb-3">List of Files</h6>
+
+                <div class="files space-y-2 max-h-[400px] overflow-y-auto">
+
+                    <!-- GeoJSON -->
+                    <div
+                        class="item geojson flex items-center justify-between bg-gray-50 rounded-md p-3 hover:bg-indigo-50 transition hidden">
+                        <div class="flex items-center gap-3 cursor-pointer ">
+                            <span class="color w-4 h-4 rounded-full bg-green-400"></span>
+                            <p class="file-name text-gray-700 font-medium text-md"></p>
+                        </div>
+                        <a href="#" class="delete-item cursor-pointer  text-red-500 hover:text-red-700 transition">
+                            <i class="uil uil-trash"></i>
+                        </a>
+                    </div>
+
+
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+
+
+
+
+    <!-- scripts----------- -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.6.0/leaflet.js"
+        integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>·
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+    <script script src="https://unpkg.com/esri-leaflet@3.0.10/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.0.2/dist/esri-leaflet-vector.js" crossorigin=""></script>
+    <script src="https://unpkg.com/@geoman-io/leaflet-geoman-free@latest/dist/leaflet-geoman.min.js"></script>
+    <script src="https://unpkg.com/leaflet.path.drag@0.0.6/src/Path.Drag.js"></script>
+    <script src="https://unpkg.com/leaflet-editable@1.2.0/src/Leaflet.Editable.js"></script>
+
+    <script src="./resources/L.Control.MousePosition.js"></script>
+    <script src="./resources/leaflet-providers.js"></script>
+    <script src="./resources/L.Control.Locate.js"></script>
+    <script src="./resources/leaflet-geojson-selector.js"></script>
+    <script src="./resources/leaflet.measure.js"></script>
+    <script src="./resources/bigImage.js"></script>
+    <!-- <script src="./resources/leaflet-measure.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/0.4.2/leaflet.draw.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+    <!-- print plugin -->
+    <script src="./resources/leaflet.browser.print.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
