@@ -41,6 +41,7 @@ let geoData;
 let selected;
 let layerControl;
 let drawnFeatures
+let geoLayer;
 
 let items = [];
 let data
@@ -123,29 +124,44 @@ curreLocation = L.control.locate({
 
 
 // print pluguins////
-var customActionToPrint = function (context, mode) {
+let customActionToPrint = function (context, mode) {
     return function () {
         window.alert("We are printing the MAP. Let's do Custom print here!");
         context._printMode(mode);
     }
 };
-// Print //////
-var options = {
-    documentTitle: 'Map printed using leaflet.browser.print plugin',
+// Browser Print options
+let options = {
+    documentTitle: 'GeoMap Print',
     closePopupsOnPrint: false,
-    printModes: [
-        // L.BrowserPrint.Mode.Landscape("Tabloid", { title: "Tabloid VIEW" }),
-        // L.browserPrint.mode("Alert", { title: "User specified print action", pageSize: "A6", action: customActionToPrint, invalidateBounds: false }),
-        L.BrowserPrint.Mode.Landscape(),
-        "Portrait",
-        L.BrowserPrint.Mode.Auto("B4", { title: "Auto" }),
-        L.BrowserPrint.Mode.Custom("B5", { title: "Select area" })
-    ],
     manualMode: false,
-    customPrintStyle: { color: "gray", dashArray: "5, 10", pane: "customPrintPane" }
+    customPrintStyle: {
+        color: "gray",
+        dashArray: "5,10",
+        weight: 2,
+        pane: "customPrintPane"
+    },
+    printModes: [
+        L.BrowserPrint.Mode.Landscape("Tabloid", { title: "Tabloid VIEW" }),
+
+        L.BrowserPrint.Mode.Custom("A6", {
+            title: "User defined print",
+            action: customActionToPrint,
+            invalidateBounds: false
+        }),
+
+        L.BrowserPrint.Mode.Landscape(),
+
+        L.BrowserPrint.Mode.Portrait(),
+
+        L.BrowserPrint.Mode.Auto("B4", { title: "Auto Print" }),
+
+        L.BrowserPrint.Mode.Custom("B5", { title: "Select area" })
+    ]
 };
-// var browserPrint = L.browserPrint(myMap, options).addTo(myMap);
-var browserControl = L.control.browserPrint(options).addTo(myMap);
+
+// Add the control to the map
+let browserControl = L.control.browserPrint(options).addTo(myMap);
 
 
 
@@ -193,7 +209,6 @@ function openModal(highlight) {
     importSection.classList.remove("ring-2", "ring-indigo-500");
     exportSection.classList.remove("ring-2", "ring-indigo-500");
 
-    // Highlight section if requested
     if (highlight === "import") {
         importSection.classList.add("ring-2", "ring-indigo-500", 'p-3', 'rounded-lg');
     } else if (highlight === "export") {
@@ -236,6 +251,8 @@ infoFile.addEventListener("click", (e) => {
 });
 
 
+
+
 // show legends--------------
 const fileItems = document.querySelectorAll('.item');
 const deleteItems = document.querySelectorAll('.delete-item');
@@ -267,6 +284,16 @@ deleteItems.forEach(delBtn => {
             layerControl.removeLayer(geoData);
             geoData = null;
         }
+         if (item.classList.contains('morocco') && moroccoBou) {
+            myMap.removeLayer(moroccoBou);
+            layerControl.removeLayer(moroccoBou);
+            moroccoBou = null;
+        }
+          if (item.classList.contains('shapefile') && geoLayer) {
+            myMap.removeLayer(geoLayer);
+            layerControl.removeLayer(geoLayer);
+            geoLayer = null;
+        }
     });
 });
 
@@ -278,7 +305,7 @@ function handleFileUpload(file, fileType, layer) {
 
     filesItems.classList.remove('hidden');
     item.classList.remove('hidden');
-    fileNameEl.textContent = file.name;
+    fileNameEl.textContent = file.name ? file.name : "GeoServer Layer";
 
 
     if (layer) {
@@ -322,7 +349,7 @@ function handleFileSelect(event) {
 
 function onEachFeature(feature, layer) {
     if (feature.properties) {
-    
+
         let popupHtml = `
             <div class="p-2 font-sans">
                 <h4 class="text-emerald-600 font-black uppercase text-[10px] tracking-widest mb-3 border-b border-slate-100 pb-2">
@@ -350,9 +377,9 @@ function onEachFeature(feature, layer) {
         `;
 
         layer.bindPopup(popupHtml, {
-            closeButton: true, 
+            closeButton: true,
             maxWidth: 300,
-            className: 'custom-map-popup' 
+            className: 'custom-map-popup'
         });
         layer.on({
             mouseover: function (e) {
@@ -364,8 +391,7 @@ function onEachFeature(feature, layer) {
                 });
             },
             mouseout: function (e) {
-
-                    layer.setStyle({ weight: 2, color: '#3388ff', fillOpacity: 0.2 });
+                layer.setStyle({ weight: 2, color: '#753a88', fillOpacity: 0.2 });
             }
         });
     }
@@ -396,30 +422,21 @@ function Ethnic2Style() {
 
 
 // choose styling to imported file//////////////
-var colors = document.querySelectorAll('.cont>div')
+let colors = document.querySelectorAll('.cont>div')
 colors.forEach((color) => {
     color.addEventListener('click', (event) => {
-        var target = event.target.id
+        let target = event.target.id
         if (geoData) {
             geoData.setStyle(Ethnic1Style(target));
-            
+
         }
         else {
             return null
         }
-        
+
     })
 })
 
-
-// saved file to localStorage;----
-myMap.on("pm:create", (e) => {
-   
-    drawnFeatures.addLayer(e.layer);
-    const geojsonData = drawnFeatures.toGeoJSON();
-    localStorage.setItem("savedFile", JSON.stringify(geojsonData));
-    
-});
 
 // --- Utility: Download ---
 function downloadFile(content, fileName, mimeType) {
@@ -439,7 +456,7 @@ document.getElementById("exportgeo").addEventListener("click", () => {
         return;
     }
     const geojsonData = drawnFeatures.toGeoJSON();
-    
+
     if (geojsonData) {
         downloadFile(
             JSON.stringify(geojsonData, 'saved_file', 2),
@@ -451,12 +468,50 @@ document.getElementById("exportgeo").addEventListener("click", () => {
 
 
 
+// get data from geoserver WFS/////
+let wfsUrl = "http://localhost:8080/geoserver/sig_web/ows?" +
+    "service=WFS&version=1.0.0&request=GetFeature&typeName=sig_web:states&outputFormat=application/json";
+
+fetch(wfsUrl)
+    .then(response => response.json())
+    .then(data => {
+        geoLayer = L.geoJson(data, {
+            onEachFeature: onEachFeature,
+            style: Ethnic2Style,
+        }).addTo(myMap);
+        handleFileUpload(data, 'shapefile', geoLayer);
+        myMap.fitBounds(geoLayer.getBounds(), { padding: [12, 12] });
+    })
+    .catch(error => console.error('Error fetching GeoJSON:', error));
 
 
+let moroccoGeoJson = 'data/morocco_id.geojson';
+fetch(moroccoGeoJson)
+    .then(response => response.json())
+    .then(data => {
+        moroccoBou = L.geoJson(data, {
+            style: Ethnic1Style,
+            onEachFeature: onEachFeature
+        }).addTo(myMap);
+        layerControl.addOverlay(moroccoBou, "Morocco Boundaries");
+        handleFileUpload(data, 'morocco', moroccoBou);
+
+    })
+    .catch(error => console.error('Error fetching Morocco GeoJSON:', error));
+
+
+
+// saved file to localStorage;----
+myMap.on("pm:create", (e) => {
+    drawnFeatures.addLayer(e.layer);
+    const geojsonData = drawnFeatures.toGeoJSON();
+    localStorage.setItem("savedFile", JSON.stringify(geojsonData));
+
+});
 // Restore drawing Data*********
 document.addEventListener("DOMContentLoaded", () => {
     const savedGeoJSON = localStorage.getItem("savedFile");
-    const restoreModal = document.getElementById("restoreModal"); 
+    const restoreModal = document.getElementById("restoreModal");
 
     if (savedGeoJSON && restoreModal) {
         restoreModal.classList.remove("hidden");
@@ -464,7 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Handle buttons inside modal
         document.getElementById("cancelRestore").addEventListener("click", () => {
             restoreModal.classList.add("hidden");
-            localStorage.removeItem("savedFile"); 
+            localStorage.removeItem("savedFile");
         });
 
         document.getElementById("confirmRestore").addEventListener("click", () => {
@@ -496,3 +551,4 @@ function restoreDrawnItems() {
 
     }
 }
+

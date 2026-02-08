@@ -69,9 +69,11 @@
 
     <!-- tob bar----------------- -->
     <div id="topBar" class="fixed top-6 left-1/2 transform -translate-x-1/2 
-    bg-white/80 backdrop-blur-md shadow-2xl shadow-slate-200/50 rounded-2xl px-6 py-3 
-    flex items-center gap-3 border border-white/20 z-[1000] min-w-fit 
-    transition-all duration-500 hover:top-5">
+            bg-white bg-opacity-90 backdrop-blur-md shadow-lg 
+            rounded-2xl px-6 py-3 flex items-center gap-3 
+            border border-gray-300 z-[1000] min-w-fit 
+            transition-all duration-500 hover:top-5">
+        <h4 class="mr-2">Geo Map</h4>
 
         <!-- {{-- Info Button --}} -->
         <button id="toggleInfo" title="View Info"
@@ -122,9 +124,8 @@
                         <span class="material-symbols-outlined text-3xl relative z-10">map</span>
                     </div>
                     <div>
-                        <h3 class="text-2xl font-black text-slate-900 tracking-tight leading-none">FSBM WebGIS</h3>
-                        <p class="text-[10px] font-bold text-emerald-500 uppercase tracking-[0.2em] mt-2">Faculty of
-                            Sciences Ben M'Sik</p>
+                        <h3 class="text-2xl font-black text-slate-900 tracking-tight leading-none">FSBM Geo Map</h3>
+
                     </div>
                 </div>
 
@@ -133,7 +134,7 @@
                     <!-- {{-- Platform Intro --}} -->
                     <div class="md:col-span-2 p-5 bg-slate-50 rounded-2xl border border-slate-100 mb-2">
                         <p class="text-sm text-slate-600 leading-relaxed">
-                            A professional geospatial solution designed for advanced interactive mapping and spatial
+                            A professional geoportal solution designed for advanced interactive mapping and spatial
                             analysis.
                         </p>
                     </div>
@@ -272,14 +273,33 @@
                     <div
                         class="item geojson flex items-center justify-between bg-gray-50 rounded-md p-3 hover:bg-indigo-50 transition hidden">
                         <div class="flex items-center gap-3 cursor-pointer ">
-                            <span class="color w-4 h-4 rounded-full bg-green-400"></span>
+                            <span class="color w-4 h-4 rounded-full bg-blue"></span>
                             <p class="file-name text-gray-700 font-medium text-md"></p>
                         </div>
                         <a href="#" class="delete-item cursor-pointer  text-red-500 hover:text-red-700 transition">
                             <i class="uil uil-trash"></i>
                         </a>
                     </div>
-
+                    <div
+                        class="item morocco flex items-center justify-between bg-gray-50 rounded-md p-3 hover:bg-indigo-50 transition hidden">
+                        <div class="flex items-center gap-3 cursor-pointer ">
+                            <span class="color w-4 h-4 rounded-full bg-[rgb(145,228,0)]"></span>
+                            <p class="file-name text-gray-700 font-medium text-md"></p>
+                        </div>
+                        <a href="#" class="delete-item cursor-pointer  text-red-500 hover:text-red-700 transition">
+                            <i class="uil uil-trash"></i>
+                        </a>
+                    </div>
+                    <div
+                        class="item shapefile flex items-center justify-between bg-gray-50 rounded-md p-3 hover:bg-indigo-50 transition hidden">
+                        <div class="flex items-center gap-3 cursor-pointer ">
+                            <span class="color w-4 h-4 rounded-full bg-[#753a88]"></span>
+                            <p class="file-name text-gray-700 font-medium text-md"></p>
+                        </div>
+                        <a href="#" class="delete-item cursor-pointer  text-red-500 hover:text-red-700 transition">
+                            <i class="uil uil-trash"></i>
+                        </a>
+                    </div>
 
 
                 </div>
