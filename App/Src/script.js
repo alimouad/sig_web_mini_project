@@ -26,16 +26,11 @@ let marker;
 let baseMaps;
 let overlays;
 let mycrlocation;
-let mouseCoord;
-let polyMesure;
-let easyBtn;
 let curreLocation;
 let ctlStyle;
 let moroccoBou;
 let lyrGoogleMap;
 let lyrGoogleHybrid;
-let osmMap;
-let imageryMap;
 let googleSat;
 let geoData;
 let selected;
@@ -87,10 +82,10 @@ baseMaps = {
 
 overlays = L.layerGroup()
 drawnFeatures = new L.FeatureGroup();
-// overlays.addLayer(moroccoBou,'morocc - boundaries');
 layerControl = L.control.layers(baseMaps).setPosition('topright').addTo(myMap);
-// layerControl.addOverlay(moroccoBou,"maroc");
 layerControl.addOverlay(drawnFeatures, "drawn");
+
+
 
 // Leaflet Pluguins////////////
 // **********************************
@@ -264,6 +259,12 @@ fileItems.forEach(item => {
         if (item.classList.contains('geojson') && geoData) {
             myMap.flyToBounds(geoData.getBounds());
         }
+        if (item.classList.contains('morocco') && moroccoBou) {
+            myMap.flyToBounds(moroccoBou.getBounds())
+        };
+        if (item.classList.contains('shapefile') && geoLayer) {
+            myMap.flyToBounds(geoLayer.getBounds())
+        }
     });
 });
 
@@ -284,12 +285,12 @@ deleteItems.forEach(delBtn => {
             layerControl.removeLayer(geoData);
             geoData = null;
         }
-         if (item.classList.contains('morocco') && moroccoBou) {
+        if (item.classList.contains('morocco') && moroccoBou) {
             myMap.removeLayer(moroccoBou);
             layerControl.removeLayer(moroccoBou);
             moroccoBou = null;
         }
-          if (item.classList.contains('shapefile') && geoLayer) {
+        if (item.classList.contains('shapefile') && geoLayer) {
             myMap.removeLayer(geoLayer);
             layerControl.removeLayer(geoLayer);
             geoLayer = null;
@@ -297,22 +298,33 @@ deleteItems.forEach(delBtn => {
     });
 });
 
-function handleFileUpload(file, fileType, layer) {
-    // Select the corresponding item dynamically
+function handleFileUpload(file, fileType, layer, fileName = null) {
+
     const item = document.querySelector(`.item.${fileType}`);
-    const filesItems = document.querySelector('.listFiles')
+    const filesItems = document.querySelector('.listFiles');
+
+    if (!item || !filesItems) return;
+
     const fileNameEl = item.querySelector('.file-name');
 
     filesItems.classList.remove('hidden');
     item.classList.remove('hidden');
-    fileNameEl.textContent = file.name ? file.name : "GeoServer Layer";
-
+    if (file && file.name) {
+        fileNameEl.textContent = file.name;
+    }
+    else if (fileName) {
+        fileNameEl.textContent = fileName;
+    }
+    else {
+        fileNameEl.textContent = "GeoServer Layer";
+    }
 
     if (layer) {
         myMap.flyToBounds(layer.getBounds(), { padding: [12, 12] });
-        layerControl.addOverlay(layer, file.name);
+        layerControl.addOverlay(layer, fileName || file?.name || "Layer");
     }
 }
+
 
 
 document.getElementById('geojson-file').addEventListener('change', handleFileSelect);
@@ -336,18 +348,16 @@ function handleFileSelect(event) {
         const data = JSON.parse(e.target.result);
 
         geoData = L.geoJson(data, {
-            onEachFeature: onEachFeature
+            onEachFeature: (feature, layer) => onEachFeature(feature, layer, 'blue'),
         }).addTo(myMap);
 
-        handleFileUpload(file, 'geojson', geoData);
-
-
+        handleFileUpload(file, 'geojson', geoData, file.name);
         alert('The file was uploaded successfully');
     };
     reader.readAsText(file);
 }
 
-function onEachFeature(feature, layer) {
+function onEachFeature(feature, layer, color) {
     if (feature.properties) {
 
         let popupHtml = `
@@ -391,7 +401,11 @@ function onEachFeature(feature, layer) {
                 });
             },
             mouseout: function (e) {
-                layer.setStyle({ weight: 2, color: '#753a88', fillOpacity: 0.2 });
+                layer.setStyle({
+                    weight: 2,
+                    color: color,
+                    fillOpacity: 0.2
+                });
             }
         });
     }
@@ -428,7 +442,6 @@ colors.forEach((color) => {
         let target = event.target.id
         if (geoData) {
             geoData.setStyle(Ethnic1Style(target));
-
         }
         else {
             return null
@@ -476,10 +489,11 @@ fetch(wfsUrl)
     .then(response => response.json())
     .then(data => {
         geoLayer = L.geoJson(data, {
-            onEachFeature: onEachFeature,
+            onEachFeature: (feature, layer) => onEachFeature(feature, layer, '#753a88'),
             style: Ethnic2Style,
         }).addTo(myMap);
-        handleFileUpload(data, 'shapefile', geoLayer);
+        handleFileUpload(data, 'shapefile', geoLayer, "Geo Server Data");
+        layerControl.addOverlay(geoLayer, "Geo Server Data");
         myMap.fitBounds(geoLayer.getBounds(), { padding: [12, 12] });
     })
     .catch(error => console.error('Error fetching GeoJSON:', error));
@@ -491,10 +505,10 @@ fetch(moroccoGeoJson)
     .then(data => {
         moroccoBou = L.geoJson(data, {
             style: Ethnic1Style,
-            onEachFeature: onEachFeature
+            onEachFeature: (feature, layer) => onEachFeature(feature, layer, 'rgb(145, 228, 0)'),
         }).addTo(myMap);
-        layerControl.addOverlay(moroccoBou, "Morocco Boundaries");
-        handleFileUpload(data, 'morocco', moroccoBou);
+        handleFileUpload(data, 'morocco', moroccoBou, "Morocco Boundaries");
+    
 
     })
     .catch(error => console.error('Error fetching Morocco GeoJSON:', error));
