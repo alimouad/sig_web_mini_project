@@ -157,9 +157,27 @@ let options = {
 
 // Add the control to the map
 let browserControl = L.control.browserPrint(options).addTo(myMap);
+myMap.on("browser-print-start", function (e) {
 
+    // ===== TITLE =====
+    const title = document.createElement("div");
+    title.innerHTML = "Geo Map";
+    title.classList.add('title_style');
 
+    e.printMap.getContainer().appendChild(title);
 
+    // ===== FILE LIST =====
+    let filesItems = document.querySelector('.listFiles');
+    if (filesItems) {
+        const fileListClone = filesItems.cloneNode(true);
+
+        fileListClone.classList.add('file_list_print');
+        
+
+        e.printMap.getContainer().appendChild(fileListClone);
+    }
+
+});
 
 
 // Draw control/////////////
@@ -183,10 +201,6 @@ myMap.pm.addControls({
 
 // get image
 L.control.bigImage({ position: 'topleft', inputTitle: 'Obtenir image' }).addTo(myMap);
-
-
-
-
 
 
 
@@ -298,10 +312,12 @@ deleteItems.forEach(delBtn => {
     });
 });
 
+
 function handleFileUpload(file, fileType, layer, fileName = null) {
 
     const item = document.querySelector(`.item.${fileType}`);
     const filesItems = document.querySelector('.listFiles');
+
 
     if (!item || !filesItems) return;
 
@@ -508,7 +524,7 @@ fetch(moroccoGeoJson)
             onEachFeature: (feature, layer) => onEachFeature(feature, layer, 'rgb(145, 228, 0)'),
         }).addTo(myMap);
         handleFileUpload(data, 'morocco', moroccoBou, "Morocco Boundaries");
-    
+
 
     })
     .catch(error => console.error('Error fetching Morocco GeoJSON:', error));
